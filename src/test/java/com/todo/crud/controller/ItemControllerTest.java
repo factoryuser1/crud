@@ -118,4 +118,42 @@ public class ItemControllerTest {
                 .andExpect(jsonPath("$.completed", is(true)));
     }
 
+    @Test
+    @Transactional
+    @Rollback
+    public void updateItemById() throws Exception{
+
+        var jsonString = mapper.writeValueAsString(item1);
+        MockHttpServletRequestBuilder request = patch("/api/items/%d".formatted(item1.getId()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(jsonString);
+
+        ResultActions perform = this.mvc.perform(request);
+
+        perform.andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.content", is("test item 1")))
+                .andExpect(jsonPath("$.completed", is(true)));
+
+//        assertTrue(repository.findItemByCompleted(item1.getCompleted()).isPresent());
+        assertEquals(repository.count(), 6);
+    }
+
+    @Test
+    @Transactional
+    @Rollback
+    public void deleteItemById() throws Exception{
+        MockHttpServletRequestBuilder request = delete("/api/items/%d".formatted(item4.getId()));
+        Long countBefore = repository.count();
+
+        ResultActions perform = mvc.perform(request);
+        Long countAfter = repository.count();
+
+        perform.andExpect(status().isOk());
+        assertFalse(repository.findItemByContent(item4.getContent()).isPresent());
+        assertTrue((countBefore - 1) == countAfter);
+    }
+
 }

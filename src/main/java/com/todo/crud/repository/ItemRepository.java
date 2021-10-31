@@ -5,6 +5,6 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.Optional;
 
 public interface ItemRepository extends CrudRepository<Item, Long> {
-    Optional<Item> findItemByCompleted(Boolean completed);
+    Optional<Item> findItemByContent(String content);
     Boolean existsByContent(String content);
 }
