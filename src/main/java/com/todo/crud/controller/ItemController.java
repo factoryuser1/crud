@@ -4,11 +4,12 @@ import com.todo.crud.model.Item;
 import com.todo.crud.repository.ItemRepository;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.NoSuchElementException;
 
-//@CrossOrigin
+@CrossOrigin
 @RestController
 @RequestMapping("/api/items")
 @ControllerAdvice
@@ -38,35 +39,31 @@ public class ItemController {
     }
 
     @PostMapping
-    public Item createNewToDoItem(@RequestBody Item item) {
-        if (!itemTable.existsByContent(item.getContent())){
-            return itemTable.save(item);
-        } else{
-            return item;
+    public ResponseEntity<Item> createNewToDoItem(@RequestBody Item item) {
+
+        if (!itemTable.existsByContent(item.getContent())) {
+            return new ResponseEntity<>(itemTable.save(item),HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(item, HttpStatus.I_AM_A_TEAPOT);
         }
     }
 
     @PatchMapping("/{id}")
-    public Item updateToDoItem(@PathVariable Long id, @RequestBody Item item){
+    public Item updateToDoItem(@PathVariable Long id, @RequestBody Item item) {
+        Item curItem = itemTable.findById(id).orElseThrow(() -> new ItemNotFoundException());
+        curItem.setContent(item.getContent());
+        curItem.setCompleted(item.getCompleted());
+        return itemTable.save(curItem);
 
-        try{
-            Item currentItem = itemTable.findById(id).get();
-            currentItem.setContent(item.getContent());
-            return itemTable.save(currentItem);
-
-        } catch (NoSuchElementException e){
-//            throw new NoSuchElementException("No such Item exit in the database with id# " + id + "!");
-            throw new ItemNotFoundException();
-        }
     }
 
     @DeleteMapping("/{id}")
-    public String deleteToDoItem(@PathVariable Long id){
-        try{
+    public String deleteToDoItem(@PathVariable Long id) {
+        try {
             itemTable.deleteById(id);
             return "Item# " + id + " was deleted successfully!";
 
-        } catch (EmptyResultDataAccessException e){
+        } catch (EmptyResultDataAccessException e) {
             throw new ItemNotFoundException();
         }
     }
@@ -75,8 +72,8 @@ public class ItemController {
     //Exception Handling Framework
     @ExceptionHandler(ItemNotFoundException.class)
     @ResponseStatus(code = HttpStatus.NOT_FOUND)
-    public String returnNotFoundErrorMessageException(ItemNotFoundException e) {
-        return "No such Item exit in the database with this id.";
+    public ResponseEntity<String> returnNotFoundErrorMessageException(ItemNotFoundException e) {
+        return new ResponseEntity<>("No such Item exit in the database with this id.", HttpStatus.BAD_REQUEST);
     }
 
     static class ItemNotFoundException extends NoSuchElementException {
