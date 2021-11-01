@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.NoSuchElementException;
 
-@CrossOrigin
+//@CrossOrigin
 @RestController
-@RequestMapping("/api/items/")
+@RequestMapping("/api/items")
 @ControllerAdvice
 public class ItemController {
 
@@ -21,7 +21,7 @@ public class ItemController {
         this.itemTable = itemTable;
     }
 
-    @GetMapping("")
+    @GetMapping
     public Iterable<Item> findAllToDoItems() {
         return itemTable.findAll();
     }
@@ -37,7 +37,7 @@ public class ItemController {
         }
     }
 
-    @PostMapping("")
+    @PostMapping
     public Item createNewToDoItem(@RequestBody Item item) {
         if (!itemTable.existsByContent(item.getContent())){
             return itemTable.save(item);
@@ -61,9 +61,10 @@ public class ItemController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteToDoItem(@PathVariable Long id){
+    public String deleteToDoItem(@PathVariable Long id){
         try{
             itemTable.deleteById(id);
+            return "Item# " + id + " was deleted successfully!";
 
         } catch (EmptyResultDataAccessException e){
             throw new ItemNotFoundException();
